@@ -105,8 +105,8 @@
                 <!-- Icon Size Slider -->
                 <div class="mb-6" id="iconSizeControl" style="display: none;">
                     <label for="iconSize" class="block text-sm font-medium text-gray-700">7. Icon Size: <span
-                            id="iconSizeValue" class="font-bold">64</span>px</label>
-                    <input type="range" id="iconSize" min="32" max="128" value="64"
+                            id="iconSizeValue" class="font-bold">128</span>px</label>
+                    <input type="range" id="iconSize" min="64" max="256" value="128"
                         class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
 
@@ -157,9 +157,9 @@
 
             // ICON_CONFIG - Easily modifiable icon settings
             const ICON_CONFIG = {
-                defaultSize: 64,
-                minSize: 32,
-                maxSize: 128,
+                defaultSize: 128,
+                minSize: 64,
+                maxSize: 256,
                 margin: 15,
                 enableSizeSlider: true  // Set to false to disable slider
             };
@@ -175,7 +175,7 @@
             const CANVAS_CONFIG = {
                 width: 400,
                 height: 400,
-                stripPosition: 0.90  // 90% from top
+                stripPosition: 1.0  // 100% from top (bottom of canvas)
             };
 
             // ====================================================================
@@ -402,11 +402,12 @@
             });
 
             // Strip Color Selection
-            generateColorPicker(stripColorPicker, stripColor, (color) => {
+            const handleStripColorSelect = (color) => {
                 stripColor = color;
-                generateColorPicker(stripColorPicker, stripColor, arguments.callee);
+                generateColorPicker(stripColorPicker, stripColor, handleStripColorSelect);
                 drawCanvas();
-            });
+            };
+            generateColorPicker(stripColorPicker, stripColor, handleStripColorSelect);
 
             // Icon Upload
             iconUpload.addEventListener('change', (e) => {
@@ -424,11 +425,12 @@
                         iconColorControl.style.display = 'block';
 
                         // Generate icon color picker
-                        generateColorPicker(iconColorPicker, iconColor, (color) => {
+                        const handleIconColorSelect = (color) => {
                             iconColor = color;
-                            generateColorPicker(iconColorPicker, iconColor, arguments.callee);
+                            generateColorPicker(iconColorPicker, iconColor, handleIconColorSelect);
                             drawCanvas();
-                        });
+                        };
+                        generateColorPicker(iconColorPicker, iconColor, handleIconColorSelect);
 
                         drawCanvas();
                     };
@@ -454,11 +456,12 @@
             });
 
             // Initialize color pickers on load
-            generateColorPicker(stripColorPicker, stripColor, (color) => {
+            const handleInitialStripColorSelect = (color) => {
                 stripColor = color;
-                generateColorPicker(stripColorPicker, stripColor, arguments.callee);
+                generateColorPicker(stripColorPicker, stripColor, handleInitialStripColorSelect);
                 drawCanvas();
-            });
+            };
+            generateColorPicker(stripColorPicker, stripColor, handleInitialStripColorSelect);
 
             // Initial draw on load
             drawCanvas();
