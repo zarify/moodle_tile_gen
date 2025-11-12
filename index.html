@@ -294,10 +294,10 @@
                         ctx.lineWidth = 5;
                     }
 
-                    // Draw text lines
-                    const yPos = canvasHeight * CANVAS_CONFIG.stripPosition;
-                    let currentY = yPos - (lines.length - 1) * lineHeight;
-                    ctx.textBaseline = 'bottom';
+                    // Draw text lines - centered vertically within the strip
+                    const stripCenterY = stripY + (stripHeight / 2);
+                    let currentY = stripCenterY - ((lines.length - 1) * lineHeight / 2);
+                    ctx.textBaseline = 'middle';
 
                     for (let i = 0; i < lines.length; i++) {
                         const lineToDraw = lines[i].trim();
