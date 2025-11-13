@@ -75,14 +75,6 @@
                     </div>
                 </div>
 
-                <!-- Icon Size Slider -->
-                <div class="mb-6" id="iconSizeControl" style="display: none;">
-                    <label for="iconSize" class="block text-sm font-medium text-gray-700">3. Icon Size: <span
-                            id="iconSizeValue" class="font-bold">128</span>px</label>
-                    <input type="range" id="iconSize" min="64" max="256" value="128"
-                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                </div>
-
                 <!-- F.3.2 Export and Reset Buttons -->
                 <div class="flex gap-3">
                     <button id="downloadButton"
@@ -102,8 +94,8 @@
             <div class="w-full md:w-2/3 mt-8 md:mt-0 flex justify-center items-start">
                 <div class="bg-white p-4 rounded-lg shadow-lg">
                     <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Preview</h2>
-                    <!-- T.2.2 Fixed 400x400 canvas -->
-                    <canvas id="canvas" width="400" height="400" class="rounded-md"></canvas>
+                    <!-- T.2.2 Fixed 270x200 canvas -->
+                    <canvas id="canvas" width="270" height="200" class="rounded-md"></canvas>
                 </div>
             </div>
 
@@ -130,12 +122,9 @@
 
             // ICON_CONFIG - Easily modifiable icon settings
             const ICON_CONFIG = {
-                defaultSize: 128,
-                minSize: 64,
-                maxSize: 256,
+                defaultSize: 60,
                 marginX: 28,
-                marginY: 19,
-                enableSizeSlider: true  // Set to false to disable slider
+                marginY: 19
             };
 
             // TEXT_CONFIG - Text styling configuration
@@ -164,9 +153,6 @@
             const downloadButton = document.getElementById('downloadButton');
             const stripColorPicker = document.getElementById('stripColorPicker');
             const iconUpload = document.getElementById('iconUpload');
-            const iconSizeInput = document.getElementById('iconSize');
-            const iconSizeValue = document.getElementById('iconSizeValue');
-            const iconSizeControl = document.getElementById('iconSizeControl');
             const resetButton = document.getElementById('resetButton');
             const toggleImageTypeButton = document.getElementById('toggleImageType');
             const backgroundImageSection = document.getElementById('backgroundImageSection');
@@ -176,7 +162,6 @@
             let image = null;
             let stripColor = COLOR_PALETTE[0].value; // Default to Moodle Orange
             let icon = null;
-            let iconSize = ICON_CONFIG.defaultSize;
             let isBackgroundMode = true; // Track whether we're in background or icon mode
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
@@ -220,12 +205,6 @@
                 stripColor = COLOR_PALETTE[0].value;
                 isBackgroundMode = true;
 
-                // Reset icon size
-                iconSize = ICON_CONFIG.defaultSize;
-                iconSizeInput.value = iconSize;
-                iconSizeValue.textContent = iconSize;
-                iconSizeControl.style.display = 'none';
-
                 // Reset file inputs
                 imageUpload.value = '';
                 iconUpload.value = '';
@@ -254,14 +233,12 @@
                     toggleImageTypeButton.textContent = 'Switch to Icon';
                     icon = null; // Clear icon when switching to background mode
                     imageUpload.value = '';
-                    iconSizeControl.style.display = 'none';
                 } else {
                     backgroundImageSection.style.display = 'none';
                     iconUploadSection.style.display = 'block';
                     toggleImageTypeButton.textContent = 'Switch to Background';
                     image = null; // Clear background image when switching to icon mode
                     iconUpload.value = '';
-                    iconSizeControl.style.display = 'none';
                 }
 
                 drawCanvas();
@@ -312,9 +289,9 @@
 
                 // Draw icon if uploaded (no colorization)
                 if (icon) {
-                    const iconX = canvasWidth - iconSize - ICON_CONFIG.marginX;
+                    const iconX = canvasWidth - ICON_CONFIG.defaultSize - ICON_CONFIG.marginX;
                     const iconY = ICON_CONFIG.marginY;
-                    ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
+                    ctx.drawImage(icon, iconX, iconY, ICON_CONFIG.defaultSize, ICON_CONFIG.defaultSize);
                 }
             }
 
@@ -353,23 +330,11 @@
                 reader.onload = (event) => {
                     icon = new Image();
                     icon.onload = () => {
-                        // Show icon size control when icon is loaded
-                        if (ICON_CONFIG.enableSizeSlider) {
-                            iconSizeControl.style.display = 'block';
-                        }
-
                         drawCanvas();
                     };
                     icon.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
-            });
-
-            // Icon Size Slider
-            iconSizeInput.addEventListener('input', (e) => {
-                iconSize = parseInt(e.target.value, 10);
-                iconSizeValue.textContent = iconSize;
-                drawCanvas();
             });
 
             // (F.3.2) Download Button
