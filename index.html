@@ -108,16 +108,16 @@
             // CONFIGURATION SECTION - Modify these values as needed
             // ====================================================================
 
-            // BACKGROUND_COLOR_PALETTE - Light, desaturated colors for canvas background
+            // BACKGROUND_COLOR_PALETTE - Same as COLOR_PALETTE but at 5% opacity over white
             const BACKGROUND_COLOR_PALETTE = [
-                { name: 'Light Blue', value: '#E8F4F8' },
-                { name: 'Light Teal', value: '#E8F3F0' },
-                { name: 'Light Moodle Blue', value: '#EBF0F8' },
-                { name: 'Light Purple', value: '#F4EEF8' },
-                { name: 'Light Dark Teal', value: '#EBF1F2' },
-                { name: 'Light Yellow', value: '#F9F4ED' },
-                { name: 'Light Orange', value: '#F6EDE8' },
-                { name: 'Light Red', value: '#F5EBF0' }
+                { name: 'Light Blue', value: 'rgba(0, 169, 206, 0.05)' },
+                { name: 'Light Teal', value: 'rgba(0, 150, 129, 0.05)' },
+                { name: 'Light Moodle Blue', value: 'rgba(22, 112, 204, 0.05)' },
+                { name: 'Light Purple', value: 'rgba(119, 37, 131, 0.05)' },
+                { name: 'Light Dark Teal', value: 'rgba(19, 91, 102, 0.05)' },
+                { name: 'Light Yellow', value: 'rgba(237, 139, 0, 0.05)' },
+                { name: 'Light Orange', value: 'rgba(222, 95, 59, 0.05)' },
+                { name: 'Light Red', value: 'rgba(163, 29, 50, 0.05)' }
             ];
 
             // COLOR_PALETTE - Easily modifiable color definitions
@@ -213,7 +213,10 @@
              * This function is called anytime an input changes.
              */
             function drawCanvas() {
-                // Clear the canvas with background color
+                // Clear the canvas with white background, then apply selected color at 5% opacity
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                
                 ctx.fillStyle = backgroundColor;
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
