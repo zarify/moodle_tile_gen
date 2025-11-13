@@ -8,10 +8,10 @@
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Set a fixed 400x400 size for the canvas */
+        /* Set canvas size to 270x200 */
         canvas {
-            width: 400px;
-            height: 400px;
+            width: 270px;
+            height: 200px;
             border: 2px solid #e2e8f0;
             /*-gray-200 */
         }
@@ -133,7 +133,8 @@
                 defaultSize: 128,
                 minSize: 64,
                 maxSize: 256,
-                margin: 15,
+                marginX: 28,
+                marginY: 19,
                 enableSizeSlider: true  // Set to false to disable slider
             };
 
@@ -146,8 +147,8 @@
 
             // CANVAS_CONFIG - Canvas and strip positioning
             const CANVAS_CONFIG = {
-                width: 400,
-                height: 400,
+                width: 270,
+                height: 200,
                 stripPosition: 0.5  // 50% from top (middle of canvas)
             };
 
@@ -251,16 +252,14 @@
                     backgroundImageSection.style.display = 'block';
                     iconUploadSection.style.display = 'none';
                     toggleImageTypeButton.textContent = 'Switch to Icon';
-                    image = null;
+                    icon = null; // Clear icon when switching to background mode
                     imageUpload.value = '';
-                    if (icon) {
-                        iconSizeControl.style.display = 'none';
-                    }
+                    iconSizeControl.style.display = 'none';
                 } else {
                     backgroundImageSection.style.display = 'none';
                     iconUploadSection.style.display = 'block';
                     toggleImageTypeButton.textContent = 'Switch to Background';
-                    icon = null;
+                    image = null; // Clear background image when switching to icon mode
                     iconUpload.value = '';
                     iconSizeControl.style.display = 'none';
                 }
@@ -313,8 +312,8 @@
 
                 // Draw icon if uploaded (no colorization)
                 if (icon) {
-                    const iconX = canvasWidth - iconSize - ICON_CONFIG.margin;
-                    const iconY = ICON_CONFIG.margin;
+                    const iconX = canvasWidth - iconSize - ICON_CONFIG.marginX;
+                    const iconY = ICON_CONFIG.marginY;
                     ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
                 }
             }
@@ -326,6 +325,7 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
+                image = null; // Clear previous image
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     image = new Image();
@@ -348,6 +348,7 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
+                icon = null; // Clear previous icon
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     icon = new Image();
