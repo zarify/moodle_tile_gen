@@ -58,6 +58,16 @@
             transform-origin: center center;
         }
 
+        .strip-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
         /* Drag and drop styles */
         .drag-active {
             border: 3px dashed #3b82f6 !important;
@@ -186,6 +196,7 @@
             
             <div class="image-preview-container" id="imagePreviewContainer">
                 <img id="imagePreview" class="image-preview" alt="Image preview" draggable="false">
+                <div id="stripOverlay" class="strip-overlay"></div>
             </div>
             
             <div class="mt-6">
@@ -454,6 +465,10 @@
                 imageEditorState.offsetX = 0;
                 imageEditorState.offsetY = 0;
                 
+                // Update the strip overlay color
+                const stripOverlay = document.getElementById('stripOverlay');
+                stripOverlay.style.backgroundColor = stripColor;
+                
                 updateImagePreview();
                 
                 document.getElementById('imageEditorOverlay').classList.add('active');
@@ -622,6 +637,13 @@
             const handleStripColorSelect = async (color) => {
                 stripColor = color;
                 generateColorPicker(stripColorPicker, COLOR_PALETTE, stripColor, handleStripColorSelect);
+                
+                // Update the strip overlay color if the modal is open
+                const stripOverlay = document.getElementById('stripOverlay');
+                if (stripOverlay) {
+                    stripOverlay.style.backgroundColor = stripColor;
+                }
+                
                 // Regenerate tinted icon when color changes
                 if (icon) {
                     tintedIcon = await getTintedImage(icon, stripColor);
