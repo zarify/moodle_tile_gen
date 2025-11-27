@@ -15,6 +15,48 @@
             border: 2px solid #e2e8f0;
             /*-gray-200 */
         }
+
+        /* Image editor modal styles */
+        .image-editor-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-editor-overlay.active {
+            display: flex;
+        }
+
+        .image-editor-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .image-preview-container {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+            margin: 0 auto;
+            cursor: move;
+            background: #f9fafb;
+        }
+
+        .image-preview {
+            position: absolute;
+            transform-origin: center center;
+        }
     </style>
 </head>
 
@@ -47,6 +89,9 @@
                             file:bg-blue-50 file:text-blue-700
                             hover:file:bg-blue-100
                         " />
+                        <button type="button" id="reEditImage" class="mt-2 text-xs text-blue-600 hover:text-blue-800 underline" style="display: none;">
+                            Re-adjust Image Position/Zoom
+                        </button>
                     </div>
 
                     <!-- Icon Upload -->
@@ -99,6 +144,33 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Image Editor Modal -->
+    <div id="imageEditorOverlay" class="image-editor-overlay">
+        <div class="image-editor-container">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Adjust Image</h2>
+            <p class="text-sm text-gray-600 mb-4">Zoom and drag to position your image within the 300x200 frame</p>
+            
+            <div class="image-preview-container" id="imagePreviewContainer">
+                <img id="imagePreview" class="image-preview" alt="Image preview" draggable="false">
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Zoom</label>
+                <div class="flex items-center gap-3">
+                    <button id="zoomOut" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded">−</button>
+                    <input type="range" id="zoomSlider" min="50" max="300" value="100" class="flex-1">
+                    <button id="zoomIn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded">+</button>
+                    <span id="zoomValue" class="text-sm font-medium text-gray-700 w-12 text-right">100%</span>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex gap-3 justify-end">
+                <button id="cancelImageEdit" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Cancel</button>
+                <button id="applyImageEdit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Apply</button>
+            </div>
         </div>
     </div>
 
@@ -167,6 +239,20 @@
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
 
+            // Image editor state
+            let imageEditorState = {
+                originalImage: null,
+                zoom: 100,
+                offsetX: 0,
+                offsetY: 0,
+                isDragging: false,
+                dragStartX: 0,
+                dragStartY: 0
+            };
+
+            // Store the last uploaded image for re-editing
+            let lastUploadedImage = null;
+
             /**
              * Generate color picker swatches
              */
@@ -202,6 +288,7 @@
                 image = null;
                 icon = null;
                 tintedIcon = null;
+                lastUploadedImage = null;
 
                 // Reset to default colors and mode
                 stripColor = COLOR_PALETTE[0].value;
@@ -215,6 +302,7 @@
                 backgroundImageSection.style.display = 'block';
                 iconUploadSection.style.display = 'none';
                 toggleImageTypeButton.textContent = 'Switch to Icon';
+                document.getElementById('reEditImage').style.display = 'none';
 
                 // Regenerate color picker
                 generateColorPicker(stripColorPicker, COLOR_PALETTE, stripColor, handleStripColorSelect);
@@ -236,12 +324,19 @@
                     icon = null; // Clear icon when switching to background mode
                     tintedIcon = null;
                     imageUpload.value = '';
+                    // Show re-edit button only if we have both a stored image AND a current image
+                    if (lastUploadedImage && image) {
+                        document.getElementById('reEditImage').style.display = 'inline';
+                    } else {
+                        document.getElementById('reEditImage').style.display = 'none';
+                    }
                 } else {
                     backgroundImageSection.style.display = 'none';
                     iconUploadSection.style.display = 'block';
                     toggleImageTypeButton.textContent = 'Switch to Background';
                     image = null; // Clear background image when switching to icon mode
                     iconUpload.value = '';
+                    document.getElementById('reEditImage').style.display = 'none';
                 }
 
                 drawCanvas();
@@ -316,6 +411,130 @@
             }
 
             /**
+             * Open image editor modal with the uploaded image
+             */
+            function openImageEditor(img) {
+                imageEditorState.originalImage = img;
+                
+                // Start at 100% zoom (which will be applied on top of the base cover scale)
+                imageEditorState.zoom = 100;
+                
+                // Center the image
+                imageEditorState.offsetX = 0;
+                imageEditorState.offsetY = 0;
+                
+                updateImagePreview();
+                
+                document.getElementById('imageEditorOverlay').classList.add('active');
+            }
+
+            /**
+             * Update the image preview in the editor
+             */
+            function updateImagePreview() {
+                const preview = document.getElementById('imagePreview');
+                const img = imageEditorState.originalImage;
+                
+                if (!img) return;
+                
+                // Make sure the image src is set
+                if (preview.src !== img.src) {
+                    preview.src = img.src;
+                    // Wait for image to load to get natural dimensions
+                    preview.onload = () => {
+                        updateImagePreview();
+                    };
+                    return;
+                }
+                
+                // Calculate the base scale to fit/cover the 300x200 frame
+                const hRatio = 300 / img.width;
+                const vRatio = 200 / img.height;
+                const baseScale = Math.max(hRatio, vRatio); // Cover ratio
+                
+                // Apply the zoom on top of the base scale
+                const zoomMultiplier = imageEditorState.zoom / 100;
+                const finalScale = baseScale * zoomMultiplier;
+                
+                // Use transform: scale instead of width/height to maintain aspect ratio
+                preview.style.transform = `scale(${finalScale})`;
+                preview.style.transformOrigin = '0 0';
+                
+                // Position the image
+                const scaledWidth = img.width * finalScale;
+                const scaledHeight = img.height * finalScale;
+                const centerX = (300 - scaledWidth) / 2;
+                const centerY = (200 - scaledHeight) / 2;
+                
+                preview.style.left = (centerX + imageEditorState.offsetX) + 'px';
+                preview.style.top = (centerY + imageEditorState.offsetY) + 'px';
+                
+                document.getElementById('zoomValue').textContent = `${Math.round(imageEditorState.zoom)}%`;
+                document.getElementById('zoomSlider').value = imageEditorState.zoom;
+            }
+
+            /**
+             * Apply the edited image to the canvas
+             */
+            function applyImageEdit() {
+                if (!imageEditorState.originalImage) return;
+                
+                // Create a temporary canvas to render the cropped/zoomed image
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 300;
+                tempCanvas.height = 200;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                const img = imageEditorState.originalImage;
+                
+                // Calculate the base scale to fit/cover the 300x200 frame
+                const hRatio = 300 / img.width;
+                const vRatio = 200 / img.height;
+                const baseScale = Math.max(hRatio, vRatio);
+                
+                // Apply the zoom on top of the base scale
+                const zoomMultiplier = imageEditorState.zoom / 100;
+                const finalScale = baseScale * zoomMultiplier;
+                
+                const scaledWidth = img.width * finalScale;
+                const scaledHeight = img.height * finalScale;
+                
+                const centerX = (300 - scaledWidth) / 2;
+                const centerY = (200 - scaledHeight) / 2;
+                const finalX = centerX + imageEditorState.offsetX;
+                const finalY = centerY + imageEditorState.offsetY;
+                
+                tempCtx.drawImage(img, finalX, finalY, scaledWidth, scaledHeight);
+                
+                // Convert temp canvas to image
+                const processedImage = new Image();
+                processedImage.onload = () => {
+                    image = processedImage;
+                    drawCanvas();
+                    closeImageEditor();
+                    // Show the re-edit button
+                    document.getElementById('reEditImage').style.display = 'inline';
+                };
+                processedImage.src = tempCanvas.toDataURL();
+            }
+
+            /**
+             * Close the image editor modal
+             */
+            function closeImageEditor() {
+                document.getElementById('imageEditorOverlay').classList.remove('active');
+                imageEditorState = {
+                    originalImage: null,
+                    zoom: 100,
+                    offsetX: 0,
+                    offsetY: 0,
+                    isDragging: false,
+                    dragStartX: 0,
+                    dragStartY: 0
+                };
+            }
+
+            /**
              * (F.3.1) Main Canvas Drawing Function
              * This function is called anytime an input changes.
              */
@@ -328,16 +547,9 @@
                 ctx.fillStyle = hexToRgba(stripColor, 0.05);
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-                // (F.1.2) Draw the Image (Scaled to "Cover")
+                // Draw the processed image
                 if (image) {
-                    const hRatio = canvasWidth / image.width;
-                    const vRatio = canvasHeight / image.height;
-                    const ratio = Math.max(hRatio, vRatio); // Use Math.max to "cover"
-                    const centerShiftX = (canvasWidth - image.width * ratio) / 2;
-                    const centerShiftY = (canvasHeight - image.height * ratio) / 2;
-
-                    ctx.drawImage(image, 0, 0, image.width, image.height,
-                        centerShiftX, centerShiftY, image.width * ratio, image.height * ratio);
+                    ctx.drawImage(image, 0, 0, 300, 200);
                 }
 
                 // Draw bottom strip
@@ -363,14 +575,16 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
-                image = null; // Clear previous image
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    image = new Image();
-                    image.onload = () => {
-                        drawCanvas(); // Redraw when image is loaded
+                    const uploadedImage = new Image();
+                    uploadedImage.onload = () => {
+                        // Store the original uploaded image
+                        lastUploadedImage = uploadedImage;
+                        // Open editor for all images
+                        openImageEditor(uploadedImage);
                     };
-                    image.src = event.target.result;
+                    uploadedImage.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             });
@@ -423,6 +637,99 @@
             // Reset Button
             resetButton.addEventListener('click', () => {
                 resetAll();
+            });
+
+            // Image editor event listeners - must be defined before they're needed
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const zoomSlider = document.getElementById('zoomSlider');
+            const zoomInBtn = document.getElementById('zoomIn');
+            const zoomOutBtn = document.getElementById('zoomOut');
+            const applyBtn = document.getElementById('applyImageEdit');
+            const cancelBtn = document.getElementById('cancelImageEdit');
+
+            // Zoom controls - use both input and change events for better browser compatibility
+            zoomSlider.addEventListener('input', (e) => {
+                imageEditorState.zoom = parseFloat(e.target.value);
+                updateImagePreview();
+            });
+            
+            zoomSlider.addEventListener('change', (e) => {
+                imageEditorState.zoom = parseFloat(e.target.value);
+                updateImagePreview();
+            });
+
+            zoomInBtn.addEventListener('click', () => {
+                imageEditorState.zoom = Math.min(300, imageEditorState.zoom + 10);
+                updateImagePreview();
+            });
+
+            zoomOutBtn.addEventListener('click', () => {
+                imageEditorState.zoom = Math.max(50, imageEditorState.zoom - 10);
+                updateImagePreview();
+            });
+
+            // Drag to reposition
+            imagePreviewContainer.addEventListener('mousedown', (e) => {
+                imageEditorState.isDragging = true;
+                imageEditorState.dragStartX = e.clientX - imageEditorState.offsetX;
+                imageEditorState.dragStartY = e.clientY - imageEditorState.offsetY;
+                imagePreviewContainer.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!imageEditorState.isDragging) return;
+                
+                imageEditorState.offsetX = e.clientX - imageEditorState.dragStartX;
+                imageEditorState.offsetY = e.clientY - imageEditorState.dragStartY;
+                updateImagePreview();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (imageEditorState.isDragging) {
+                    imageEditorState.isDragging = false;
+                    imagePreviewContainer.style.cursor = 'move';
+                }
+            });
+
+            // Touch support for mobile
+            imagePreviewContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                imageEditorState.isDragging = true;
+                imageEditorState.dragStartX = touch.clientX - imageEditorState.offsetX;
+                imageEditorState.dragStartY = touch.clientY - imageEditorState.offsetY;
+            });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!imageEditorState.isDragging) return;
+                
+                const touch = e.touches[0];
+                imageEditorState.offsetX = touch.clientX - imageEditorState.dragStartX;
+                imageEditorState.offsetY = touch.clientY - imageEditorState.dragStartY;
+                updateImagePreview();
+            });
+
+            document.addEventListener('touchend', () => {
+                imageEditorState.isDragging = false;
+            });
+
+            // Apply and cancel buttons
+            applyBtn.addEventListener('click', () => {
+                applyImageEdit();
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                closeImageEditor();
+                imageUpload.value = ''; // Clear the file input
+            });
+
+            // Re-edit image button
+            const reEditImageBtn = document.getElementById('reEditImage');
+            reEditImageBtn.addEventListener('click', () => {
+                if (lastUploadedImage) {
+                    openImageEditor(lastUploadedImage);
+                }
             });
 
             // Initial draw on load
