@@ -367,6 +367,21 @@
             margin-top: 1.5rem;
         }
 
+        /* iframe mode adjustments */
+        body.in-iframe .header {
+            display: none;
+        }
+
+        body.in-iframe .container {
+            padding: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            body.in-iframe .container {
+                padding: 1rem;
+            }
+        }
+
         /* Image editor modal styles */
         .image-editor-overlay {
             display: none;
@@ -545,6 +560,11 @@
     </div>
 
     <script>
+        // Detect if running in an iframe and apply styling
+        if (window.self !== window.top) {
+            document.body.classList.add('in-iframe');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // ====================================================================
             // CONFIGURATION SECTION - Modify these values as needed

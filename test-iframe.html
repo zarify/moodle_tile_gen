@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodle Tile Generator - Iframe Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .demo-header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-header p {
+            font-size: 1.125rem;
+            color: #6b7280;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-section h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .demo-section p {
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .iframe-wrapper {
+            flex: 1;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            background: white;
+        }
+
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+
+        .demo-footer {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .demo-footer h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-footer p {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .demo-footer ul {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .demo-footer li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>Moodle Tile Generator - Iframe Demo</h1>
+            <p>Compare the standalone and embedded appearances</p>
+        </div>
+
+        <div class="demo-grid">
+            <!-- Standalone View -->
+            <div class="demo-section">
+                <h2>Standalone View</h2>
+                <p>Open the page directly. Shows the full header, normal padding, and complete layout.</p>
+                <p style="margin-bottom: 0.5rem; font-weight: 600;"><a href="index.html" target="_blank" style="color: #2563eb; text-decoration: underline;">Open in new tab →</a></p>
+                <p style="font-size: 0.75rem; color: #9ca3af;">The header is visible and padding is at full size</p>
+            </div>
+
+            <!-- Embedded View -->
+            <div class="demo-section">
+                <h2>Embedded View (in Moodle)</h2>
+                <p>The page embedded in an iframe automatically hides the header and uses reduced padding to maximize space.</p>
+                <div class="iframe-wrapper">
+                    <iframe src="index.html" title="Embedded Moodle Tile Generator"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-footer">
+            <h2>About Iframe Detection</h2>
+            <p>The Moodle Tile Generator automatically detects when it's running inside an iframe and adjusts its appearance:</p>
+            <ul>
+                <li><strong>Hides the header:</strong> Removes the "Moodle Tile Image Creator" title to save vertical space</li>
+                <li><strong>Reduces padding:</strong> Decreases container padding from 1rem/2rem to 0.5rem/1rem for more usable space</li>
+                <li><strong>Detection method:</strong> Uses <code>window.self !== window.top</code> to detect iframe context</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>How to compare:</strong> Open the "Standalone View" link in a new tab to see the full header and normal padding, then compare with the "Embedded View" iframe on the right which has the header hidden and reduced padding.</p>
+        </div>
+    </div>
+</body>
+</html>
