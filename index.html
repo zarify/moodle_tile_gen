@@ -592,7 +592,8 @@
             const ICON_CONFIG = {
                 defaultSize: 60,
                 marginX: 28,
-                marginY: 19
+                marginY: 19,
+                svgScale: 4  // Render SVGs at 4x resolution for crisp quality
             };
 
             // TEXT_CONFIG - Text styling configuration
@@ -634,6 +635,7 @@
             let tintedIcon = null; // Tinted version of the icon
             let isBackgroundMode = true; // Track whether we're in background or icon mode
             let shouldTintIcon = true; // Track whether to tint the icon (default: true)
+            let iconIsSVG = false; // Track if the current icon is an SVG
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
 
@@ -687,6 +689,7 @@
                 icon = null;
                 tintedIcon = null;
                 lastUploadedImage = null;
+                iconIsSVG = false;
 
                 // Reset to default colors and mode
                 stripColor = COLOR_PALETTE[0].value;
@@ -755,21 +758,31 @@
             /**
              * Tint a single-color image to the specified color
              * Creates a tinted version of the image using canvas manipulation
+             * For SVGs, renders at higher resolution for better quality
              * Returns a promise that resolves with the tinted image
              */
-            function getTintedImage(sourceImage, tintColor) {
+            function getTintedImage(sourceImage, tintColor, isSVG = false) {
                 return new Promise((resolve) => {
+                    // For SVGs, render at higher resolution for crisp output
+                    const scale = isSVG ? ICON_CONFIG.svgScale : 1;
+                    const renderWidth = sourceImage.width * scale;
+                    const renderHeight = sourceImage.height * scale;
+                    
                     // Create an off-screen canvas for tinting
                     const tintCanvas = document.createElement('canvas');
-                    tintCanvas.width = sourceImage.width;
-                    tintCanvas.height = sourceImage.height;
-                    const tintCtx = tintCanvas.getContext('2d');
+                    tintCanvas.width = renderWidth;
+                    tintCanvas.height = renderHeight;
+                    const tintCtx = tintCanvas.getContext('2d', { willReadFrequently: true });
+                    
+                    // Enable image smoothing for better quality
+                    tintCtx.imageSmoothingEnabled = true;
+                    tintCtx.imageSmoothingQuality = 'high';
 
-                    // Draw the original image
-                    tintCtx.drawImage(sourceImage, 0, 0);
+                    // Draw the original image at scaled size
+                    tintCtx.drawImage(sourceImage, 0, 0, renderWidth, renderHeight);
 
                     // Get image data
-                    const imageData = tintCtx.getImageData(0, 0, tintCanvas.width, tintCanvas.height);
+                    const imageData = tintCtx.getImageData(0, 0, renderWidth, renderHeight);
                     const data = imageData.data;
 
                     // Parse target tint color
@@ -777,36 +790,38 @@
                     const tintG = parseInt(tintColor.slice(3, 5), 16);
                     const tintB = parseInt(tintColor.slice(5, 7), 16);
 
-                    // Apply tint: for each non-transparent pixel, replace its color with the tint color
-                    // while preserving the alpha channel (transparency)
+                    // Apply tint: for each pixel, replace its color with the tint color
+                    // while preserving the alpha channel (transparency) for smooth edges
                     for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i + 1];
-                        const b = data[i + 2];
                         const a = data[i + 3];
 
-                        // Check if pixel is not fully transparent
+                        // Only process pixels that have some opacity
                         if (a > 0) {
-                            // Calculate brightness/luminance of original pixel
-                            const brightness = (r + g + b) / 3;
+                            // Calculate brightness/luminance of original pixel using proper weighting
+                            const r = data[i];
+                            const g = data[i + 1];
+                            const b = data[i + 2];
                             
-                            // Apply tint color while preserving brightness
-                            data[i] = Math.round(tintR * (brightness / 255));
-                            data[i + 1] = Math.round(tintG * (brightness / 255));
-                            data[i + 2] = Math.round(tintB * (brightness / 255));
-                            // Keep alpha unchanged
+                            // Use perceptual luminance formula for better results
+                            const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                            
+                            // Apply tint color while preserving brightness and alpha
+                            data[i] = tintR * brightness;
+                            data[i + 1] = tintG * brightness;
+                            data[i + 2] = tintB * brightness;
+                            // Keep alpha unchanged - this preserves anti-aliasing
                         }
                     }
 
                     // Put the tinted image data back
                     tintCtx.putImageData(imageData, 0, 0);
 
-                    // Convert to image and return
+                    // Convert to image and return with PNG to preserve alpha channel
                     const tintedImage = new Image();
                     tintedImage.onload = () => {
                         resolve(tintedImage);
                     };
-                    tintedImage.src = tintCanvas.toDataURL();
+                    tintedImage.src = tintCanvas.toDataURL('image/png');
                 });
             }
 
@@ -1005,7 +1020,7 @@
                 
                 // Regenerate tinted icon when color changes (if tinting is enabled)
                 if (icon && shouldTintIcon) {
-                    tintedIcon = await getTintedImage(icon, stripColor);
+                    tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
                 }
                 drawCanvas();
             };
@@ -1018,13 +1033,14 @@
 
                 icon = null; // Clear previous icon
                 tintedIcon = null;
+                iconIsSVG = file.type === 'image/svg+xml';
                 const reader = new FileReader();
                 reader.onload = async (event) => {
                     icon = new Image();
                     icon.onload = async () => {
                         // Tint the icon to the current strip color if tinting is enabled
                         if (shouldTintIcon) {
-                            tintedIcon = await getTintedImage(icon, stripColor);
+                            tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
                         }
                         drawCanvas();
                     };
@@ -1038,7 +1054,7 @@
                 shouldTintIcon = e.target.checked;
                 // Generate tinted version if needed and not already generated
                 if (icon && shouldTintIcon && !tintedIcon) {
-                    tintedIcon = await getTintedImage(icon, stripColor);
+                    tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
                 }
                 drawCanvas();
             });
@@ -1178,11 +1194,12 @@
                         // Handle icon upload
                         icon = null;
                         tintedIcon = null;
+                        iconIsSVG = file.type === 'image/svg+xml';
                         icon = new Image();
                         icon.onload = async () => {
                             // Tint the icon to the current strip color if tinting is enabled
                             if (shouldTintIcon) {
-                                tintedIcon = await getTintedImage(icon, stripColor);
+                                tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
                             }
                             drawCanvas();
                         };
