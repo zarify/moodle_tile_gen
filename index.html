@@ -764,6 +764,7 @@
             function getTintedImage(sourceImage, tintColor, isSVG = false) {
                 return new Promise((resolve) => {
                     // For SVGs, render at higher resolution for crisp output
+                    // The aspect ratio will be preserved because we scale both dimensions equally
                     const scale = isSVG ? ICON_CONFIG.svgScale : 1;
                     const renderWidth = sourceImage.width * scale;
                     const renderHeight = sourceImage.height * scale;
@@ -778,7 +779,7 @@
                     tintCtx.imageSmoothingEnabled = true;
                     tintCtx.imageSmoothingQuality = 'high';
 
-                    // Draw the original image at scaled size
+                    // Draw the original image at scaled size for quality
                     tintCtx.drawImage(sourceImage, 0, 0, renderWidth, renderHeight);
 
                     // Get image data
@@ -981,10 +982,16 @@
 
                 // Draw icon if uploaded (tinted to strip color if enabled)
                 if (icon) {
-                    const iconX = canvasWidth - ICON_CONFIG.defaultSize - ICON_CONFIG.marginX;
+                    // Calculate dimensions based on the original icon to maintain aspect ratio
+                    const displayHeight = ICON_CONFIG.defaultSize;
+                    const aspectRatio = icon.width / icon.height;
+                    const displayWidth = displayHeight * aspectRatio;
+                    
+                    const iconX = canvasWidth - displayWidth - ICON_CONFIG.marginX;
                     const iconY = ICON_CONFIG.marginY;
                     const iconToDraw = shouldTintIcon && tintedIcon ? tintedIcon : icon;
-                    ctx.drawImage(iconToDraw, iconX, iconY, ICON_CONFIG.defaultSize, ICON_CONFIG.defaultSize);
+                    
+                    ctx.drawImage(iconToDraw, iconX, iconY, displayWidth, displayHeight);
                 }
             }
 
@@ -1241,7 +1248,10 @@
 
             document.body.addEventListener('dragleave', (e) => {
                 dragCounter--;
-                if (dragCounter === 0) {
+                // Check if we're leaving the window entirely (relatedTarget will be null)
+                // or if the target is the body itself
+                if (dragCounter <= 0 || e.relatedTarget === null || !document.body.contains(e.relatedTarget)) {
+                    dragCounter = 0;
                     document.body.classList.remove('page-drag-active');
                 }
             });
