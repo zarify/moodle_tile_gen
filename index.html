@@ -367,6 +367,37 @@
             margin-top: 1.5rem;
         }
 
+        /* Icon position controls */
+        .icon-position-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .position-button {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid #d1d5db;
+            background-color: white;
+            color: #374151;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .position-button:hover {
+            border-color: #9ca3af;
+            background-color: #f3f4f6;
+        }
+
+        .position-button.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
         /* iframe mode adjustments */
         body.in-iframe .header {
             display: none;
@@ -496,6 +527,16 @@
                                 <span class="form-hint" style="margin: 0;">Tint icon with strip color</span>
                             </label>
                         </div>
+
+                        <!-- Icon Position Controls -->
+                        <div id="iconPositionSection" style="margin-top: 0.75rem;">
+                            <label class="form-sublabel">Icon Horizontal Position</label>
+                            <div class="icon-position-group" id="iconPositionGroup">
+                                <button type="button" class="position-button" data-position="left">Left</button>
+                                <button type="button" class="position-button" data-position="center">Center</button>
+                                <button type="button" class="position-button active" data-position="right">Right</button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Toggle button to switch between background and icon -->
@@ -593,7 +634,8 @@
                 defaultSize: 60,
                 marginX: 28,
                 marginY: 19,
-                svgScale: 4  // Render SVGs at 4x resolution for crisp quality
+                svgScale: 4,  // Render SVGs at 4x resolution for crisp quality
+                defaultPosition: 'right'  // Icon horizontal position: 'left', 'center', or 'right'
             };
 
             // TEXT_CONFIG - Text styling configuration
@@ -636,6 +678,7 @@
             let isBackgroundMode = true; // Track whether we're in background or icon mode
             let shouldTintIcon = true; // Track whether to tint the icon (default: true)
             let iconIsSVG = false; // Track if the current icon is an SVG
+            let iconPosition = ICON_CONFIG.defaultPosition; // Icon horizontal position
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
 
@@ -695,6 +738,7 @@
                 stripColor = COLOR_PALETTE[0].value;
                 isBackgroundMode = true;
                 shouldTintIcon = true;
+                iconPosition = ICON_CONFIG.defaultPosition;
 
                 // Reset file inputs
                 imageUpload.value = '';
@@ -706,6 +750,9 @@
                 iconUploadSection.style.display = 'none';
                 toggleImageTypeButton.textContent = 'Switch to Icon';
                 document.getElementById('reEditImage').style.display = 'none';
+
+                // Reset icon position button state
+                updateIconPositionButtons(ICON_CONFIG.defaultPosition);
 
                 // Regenerate color picker
                 generateColorPicker(stripColorPicker, COLOR_PALETTE, stripColor, handleStripColorSelect);
@@ -743,6 +790,19 @@
                 }
 
                 drawCanvas();
+            }
+
+            /**
+             * Update icon position button states
+             */
+            function updateIconPositionButtons(position) {
+                document.querySelectorAll('.position-button').forEach(btn => {
+                    if (btn.getAttribute('data-position') === position) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
             }
 
             /**
@@ -987,7 +1047,20 @@
                     const aspectRatio = icon.width / icon.height;
                     const displayWidth = displayHeight * aspectRatio;
                     
-                    const iconX = canvasWidth - displayWidth - ICON_CONFIG.marginX;
+                    // Calculate iconX based on position setting
+                    let iconX;
+                    switch (iconPosition) {
+                        case 'left':
+                            iconX = ICON_CONFIG.marginX;
+                            break;
+                        case 'center':
+                            iconX = (canvasWidth - displayWidth) / 2;
+                            break;
+                        case 'right':
+                        default:
+                            iconX = canvasWidth - displayWidth - ICON_CONFIG.marginX;
+                    }
+                    
                     const iconY = ICON_CONFIG.marginY;
                     const iconToDraw = shouldTintIcon && tintedIcon ? tintedIcon : icon;
                     
@@ -1064,6 +1137,16 @@
                     tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
                 }
                 drawCanvas();
+            });
+
+            // Icon Position Buttons
+            document.querySelectorAll('.position-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    iconPosition = btn.getAttribute('data-position');
+                    updateIconPositionButtons(iconPosition);
+                    drawCanvas();
+                });
             });
 
             // (F.3.2) Download Button
