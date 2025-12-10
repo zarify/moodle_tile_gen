@@ -588,10 +588,21 @@
                         <div class="form-hint">Click to upload or drag & drop an icon here</div>
                         <input type="file" id="iconUpload" accept="image/svg+xml, image/png" class="icon-file-input" />
                         <div style="margin-top: 0.75rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" id="tintIconCheckbox" checked style="cursor: pointer;" />
-                                <span class="form-hint" style="margin: 0;">Tint icon with strip colour</span>
-                            </label>
+                            <div class="form-hint" style="margin-bottom: 0.5rem;">Icon Colour</div>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="radio" name="iconTintMode" value="original" style="cursor: pointer;" />
+                                    <span class="form-hint" style="margin: 0;">Original</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="radio" name="iconTintMode" value="tint" checked style="cursor: pointer;" />
+                                    <span class="form-hint" style="margin: 0;">Tint with strip colour</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="radio" name="iconTintMode" value="grey" style="cursor: pointer;" />
+                                    <span class="form-hint" style="margin: 0;">Grey</span>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Advanced Options (Collapsible) -->
@@ -606,9 +617,9 @@
                                 <div class="form-section">
                                     <label class="form-sublabel">Icon Horizontal Position</label>
                                     <div class="icon-position-group" id="iconPositionGroup">
-                                        <button type="button" class="position-button" data-position="left">Left</button>
+                                        <button type="button" class="position-button active" data-position="left">Left</button>
                                         <button type="button" class="position-button" data-position="center">Center</button>
-                                        <button type="button" class="position-button active" data-position="right">Right</button>
+                                        <button type="button" class="position-button" data-position="right">Right</button>
                                     </div>
                                 </div>
 
@@ -758,15 +769,15 @@
             const ICON_CONFIG = {
                 defaultSize: 60,
                 marginX: 28,
-                marginY: 19,
+                marginY: 10,
                 svgScale: 4,  // Render SVGs at 4x resolution for crisp quality
-                defaultPosition: 'right'  // Icon horizontal position: 'left', 'center', or 'right'
+                defaultPosition: 'left'  // Icon horizontal position: 'left', 'center', or 'right'
             };
 
             // ADVANCED_ICON_OPTIONS - Advanced icon customization defaults
             const ADVANCED_ICON_OPTIONS = {
                 verticalSize: 60,
-                marginTop: 19,
+                marginTop: 10,
                 horizontalPadding: 28
             };
 
@@ -802,15 +813,16 @@
             const toggleImageTypeButton = document.getElementById('toggleImageType');
             const backgroundImageSection = document.getElementById('backgroundImageSection');
             const iconUploadSection = document.getElementById('iconUploadSection');
-            const tintIconCheckbox = document.getElementById('tintIconCheckbox');
+            const iconTintModeRadios = document.querySelectorAll('input[name="iconTintMode"]');
 
             // --- State Variables ---
             let image = null;
             let stripColor = COLOR_PALETTE[0].value; // Default to Moodle Orange
             let icon = null;
-            let tintedIcon = null; // Tinted version of the icon
+            let tintedIcon = null; // Tinted version of the icon (with strip color)
+            let greyIcon = null; // Grey tinted version of the icon
             let isBackgroundMode = true; // Track whether we're in background or icon mode
-            let shouldTintIcon = true; // Track whether to tint the icon (default: true)
+            let iconTintMode = 'tint'; // Icon tint mode: 'original', 'tint', or 'grey' (default: 'tint')
             let iconIsSVG = false; // Track if the current icon is an SVG
             let iconPosition = ICON_CONFIG.defaultPosition; // Icon horizontal position
             
@@ -930,13 +942,14 @@
                 image = null;
                 icon = null;
                 tintedIcon = null;
+                greyIcon = null;
                 lastUploadedImage = null;
                 iconIsSVG = false;
 
                 // Reset to default colors and mode
                 stripColor = COLOR_PALETTE[0].value;
                 isBackgroundMode = true;
-                shouldTintIcon = true;
+                iconTintMode = 'tint';
                 iconPosition = ICON_CONFIG.defaultPosition;
 
                 // Reset advanced icon options to defaults
@@ -946,7 +959,7 @@
                 // Reset file inputs
                 imageUpload.value = '';
                 iconUpload.value = '';
-                tintIconCheckbox.checked = true;
+                document.querySelector('input[name="iconTintMode"][value="tint"]').checked = true;
 
                 // Reset UI to background mode
                 backgroundImageSection.style.display = 'block';
@@ -979,6 +992,7 @@
                     toggleImageTypeButton.textContent = 'Switch to Icon';
                     icon = null; // Clear icon when switching to background mode
                     tintedIcon = null;
+                    greyIcon = null;
                     imageUpload.value = '';
                     // Show re-edit button only if we have both a stored image AND a current image
                     if (lastUploadedImage && image) {
@@ -1272,7 +1286,12 @@
                     }
                     
                     const iconY = advancedIconOptions.marginTop;
-                    const iconToDraw = shouldTintIcon && tintedIcon ? tintedIcon : icon;
+                    let iconToDraw = icon;
+                    if (iconTintMode === 'tint' && tintedIcon) {
+                        iconToDraw = tintedIcon;
+                    } else if (iconTintMode === 'grey' && greyIcon) {
+                        iconToDraw = greyIcon;
+                    }
                     
                     ctx.drawImage(iconToDraw, iconX, iconY, displayWidth, displayHeight);
                 }
@@ -1308,8 +1327,8 @@
                     stripOverlay.style.backgroundColor = stripColor;
                 }
                 
-                // Regenerate tinted icon when color changes (if tinting is enabled)
-                if (icon && shouldTintIcon) {
+                // Regenerate tinted icon when color changes (if tint mode is active)
+                if (icon && iconTintMode === 'tint') {
                     tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
                 }
                 drawCanvas();
@@ -1323,15 +1342,15 @@
 
                 icon = null; // Clear previous icon
                 tintedIcon = null;
+                greyIcon = null;
                 iconIsSVG = file.type === 'image/svg+xml';
                 const reader = new FileReader();
                 reader.onload = async (event) => {
                     icon = new Image();
                     icon.onload = async () => {
-                        // Tint the icon to the current strip color if tinting is enabled
-                        if (shouldTintIcon) {
-                            tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
-                        }
+                        // Generate both tinted and grey versions for switching
+                        tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
+                        greyIcon = await getTintedImage(icon, '#808080', iconIsSVG);
                         drawCanvas();
                     };
                     icon.src = event.target.result;
@@ -1339,14 +1358,20 @@
                 reader.readAsDataURL(file);
             });
 
-            // Tint Icon Checkbox
-            tintIconCheckbox.addEventListener('change', async (e) => {
-                shouldTintIcon = e.target.checked;
-                // Generate tinted version if needed and not already generated
-                if (icon && shouldTintIcon && !tintedIcon) {
-                    tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
-                }
-                drawCanvas();
+            // Icon Tint Mode Radio Buttons
+            iconTintModeRadios.forEach(radio => {
+                radio.addEventListener('change', async (e) => {
+                    iconTintMode = e.target.value;
+                    // Generate tinted versions if needed and not already generated
+                    if (icon) {
+                        if (iconTintMode === 'tint' && !tintedIcon) {
+                            tintedIcon = await getTintedImage(icon, stripColor, iconIsSVG);
+                        } else if (iconTintMode === 'grey' && !greyIcon) {
+                            greyIcon = await getTintedImage(icon, '#808080', iconIsSVG);
+                        }
+                    }
+                    drawCanvas();
+                });
             });
 
             // Icon Position Buttons
