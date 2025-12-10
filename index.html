@@ -159,6 +159,14 @@
             margin-bottom: 0.5rem;
         }
 
+        #advancedOptionsContent .form-section {
+            margin-bottom: 1rem;
+        }
+
+        #advancedOptionsContent .form-section:last-child {
+            margin-bottom: 0;
+        }
+
         /* File inputs */
         input[type="file"] {
             display: block;
@@ -296,9 +304,11 @@
 
         /* Color picker grid */
         .color-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
+            align-items: center;
+            justify-content: flex-start;
         }
 
         .color-swatch {
@@ -307,6 +317,7 @@
             border-radius: 0.375rem;
             border: 2px solid #d1d5db;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
         .color-swatch:hover {
@@ -365,6 +376,61 @@
 
         .zoom-section {
             margin-top: 1.5rem;
+        }
+
+        /* Slider with input field container */
+        .slider-control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .slider-input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .value-input {
+            width: 4rem;
+            padding: 0.375rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            text-align: right;
+        }
+
+        .value-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .reset-slider-btn {
+            padding: 0.375rem;
+            background-color: #e5e7eb;
+            color: #374151;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .reset-slider-btn:hover {
+            background-color: #d1d5db;
+        }
+
+        .reset-slider-btn:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+        .reset-slider-btn svg {
+            width: 1rem;
+            height: 1rem;
         }
 
         /* Icon position controls */
@@ -504,7 +570,7 @@
 
                 <!-- Step 1: Choose Background Image or Icon -->
                 <div class="form-section">
-                    <label class="form-label">1. Add Background Image or Icon (Choose One)</label>
+                    <label class="form-label">Add Background Image or Icon (Choose One)</label>
                     
                     <!-- Background Image Upload -->
                     <div class="form-section" id="backgroundImageSection">
@@ -524,17 +590,76 @@
                         <div style="margin-top: 0.75rem;">
                             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                                 <input type="checkbox" id="tintIconCheckbox" checked style="cursor: pointer;" />
-                                <span class="form-hint" style="margin: 0;">Tint icon with strip color</span>
+                                <span class="form-hint" style="margin: 0;">Tint icon with strip colour</span>
                             </label>
                         </div>
 
-                        <!-- Icon Position Controls -->
-                        <div id="iconPositionSection" style="margin-top: 0.75rem;">
-                            <label class="form-sublabel">Icon Horizontal Position</label>
-                            <div class="icon-position-group" id="iconPositionGroup">
-                                <button type="button" class="position-button" data-position="left">Left</button>
-                                <button type="button" class="position-button" data-position="center">Center</button>
-                                <button type="button" class="position-button active" data-position="right">Right</button>
+                        <!-- Advanced Options (Collapsible) -->
+                        <div id="advancedIconOptions" style="margin-top: 1rem;">
+                            <button type="button" id="advancedOptionsToggle" class="btn-secondary" style="width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                                <span>Advanced Options</span>
+                                <span id="advancedOptionsToggleIcon" style="font-size: 0.75rem;">▶</span>
+                            </button>
+                            
+                            <div id="advancedOptionsContent" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background-color: #f9fafb; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+                                <!-- Icon Horizontal Position -->
+                                <div class="form-section">
+                                    <label class="form-sublabel">Icon Horizontal Position</label>
+                                    <div class="icon-position-group" id="iconPositionGroup">
+                                        <button type="button" class="position-button" data-position="left">Left</button>
+                                        <button type="button" class="position-button" data-position="center">Center</button>
+                                        <button type="button" class="position-button active" data-position="right">Right</button>
+                                    </div>
+                                </div>
+
+                                <!-- Icon Vertical Size -->
+                                <div class="form-section">
+                                    <label class="form-sublabel">Icon Vertical Size</label>
+                                    <div class="slider-control-group">
+                                        <div class="slider-input-wrapper">
+                                            <input type="range" id="iconVerticalSize" min="20" max="120" value="60" style="flex: 1;">
+                                            <input type="text" id="iconVerticalSizeInput" class="value-input" value="60px" />
+                                        </div>
+                                        <button type="button" class="reset-slider-btn" id="resetIconVerticalSize" title="Reset to default">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Icon Margin Top -->
+                                <div class="form-section">
+                                    <label class="form-sublabel">Icon Margin Above</label>
+                                    <div class="slider-control-group">
+                                        <div class="slider-input-wrapper">
+                                            <input type="range" id="iconMarginTop" min="0" max="60" value="19" style="flex: 1;">
+                                            <input type="text" id="iconMarginTopInput" class="value-input" value="19px" />
+                                        </div>
+                                        <button type="button" class="reset-slider-btn" id="resetIconMarginTop" title="Reset to default">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Icon Horizontal Padding -->
+                                <div class="form-section">
+                                    <label class="form-sublabel">Icon Horizontal Padding</label>
+                                    <div class="slider-control-group">
+                                        <div class="slider-input-wrapper">
+                                            <input type="range" id="iconHorizontalPadding" min="5" max="60" value="28" style="flex: 1;">
+                                            <input type="text" id="iconHorizontalPaddingInput" class="value-input" value="28px" />
+                                        </div>
+                                        <button type="button" class="reset-slider-btn" id="resetIconHorizontalPadding" title="Reset to default">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="form-hint">Applied to left or right depending on position</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -545,9 +670,9 @@
                     </button>
                 </div>
 
-                <!-- Strip Color Selection -->
+                <!-- Strip Colour Selection -->
                 <div class="form-section">
-                    <label class="form-label">2. Strip Color</label>
+                    <label class="form-label">Strip Colour</label>
                     <div class="color-grid" id="stripColorPicker">
                         <!-- Color swatches will be generated by JavaScript -->
                     </div>
@@ -638,6 +763,15 @@
                 defaultPosition: 'right'  // Icon horizontal position: 'left', 'center', or 'right'
             };
 
+            // ADVANCED_ICON_OPTIONS - Advanced icon customization defaults
+            const ADVANCED_ICON_OPTIONS = {
+                verticalSize: 60,
+                marginTop: 19,
+                horizontalPadding: 28
+            };
+
+            const LOCALSTORAGE_KEY = 'moodleTileAdvancedIconOptions';
+
             // TEXT_CONFIG - Text styling configuration
             const TEXT_CONFIG = {
                 color: '#FFFFFF',
@@ -679,6 +813,14 @@
             let shouldTintIcon = true; // Track whether to tint the icon (default: true)
             let iconIsSVG = false; // Track if the current icon is an SVG
             let iconPosition = ICON_CONFIG.defaultPosition; // Icon horizontal position
+            
+            // Advanced icon options state
+            let advancedIconOptions = {
+                verticalSize: ADVANCED_ICON_OPTIONS.verticalSize,
+                marginTop: ADVANCED_ICON_OPTIONS.marginTop,
+                horizontalPadding: ADVANCED_ICON_OPTIONS.horizontalPadding
+            };
+            
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
 
@@ -724,6 +866,63 @@
             }
 
             /**
+             * Load advanced icon options from localStorage
+             */
+            function loadAdvancedIconOptions() {
+                const stored = localStorage.getItem(LOCALSTORAGE_KEY);
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        advancedIconOptions = {
+                            verticalSize: parsed.verticalSize !== undefined ? parsed.verticalSize : ADVANCED_ICON_OPTIONS.verticalSize,
+                            marginTop: parsed.marginTop !== undefined ? parsed.marginTop : ADVANCED_ICON_OPTIONS.marginTop,
+                            horizontalPadding: parsed.horizontalPadding !== undefined ? parsed.horizontalPadding : ADVANCED_ICON_OPTIONS.horizontalPadding
+                        };
+                    } catch (e) {
+                        // If parse fails, use defaults
+                        advancedIconOptions = { ...ADVANCED_ICON_OPTIONS };
+                    }
+                } else {
+                    advancedIconOptions = { ...ADVANCED_ICON_OPTIONS };
+                }
+            }
+
+            /**
+             * Save advanced icon options to localStorage
+             */
+            function saveAdvancedIconOptions() {
+                localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(advancedIconOptions));
+            }
+
+            /**
+             * Parse numeric input value with optional unit (e.g., "50px", "50em", or just "50")
+             * Defaults to px if no unit is specified
+             */
+            function parseNumericInput(value, min, max) {
+                // Extract just the number part
+                const match = value.match(/^(\d+(?:\.\d+)?)/);
+                if (!match) return min;
+                
+                const num = parseFloat(match[1]);
+                // Clamp to min/max range
+                return Math.max(min, Math.min(max, Math.round(num)));
+            }
+
+            /**
+             * Update the UI to reflect current advanced options values
+             */
+            function updateAdvancedOptionsUI() {
+                document.getElementById('iconVerticalSize').value = advancedIconOptions.verticalSize;
+                document.getElementById('iconVerticalSizeInput').value = advancedIconOptions.verticalSize + 'px';
+                
+                document.getElementById('iconMarginTop').value = advancedIconOptions.marginTop;
+                document.getElementById('iconMarginTopInput').value = advancedIconOptions.marginTop + 'px';
+                
+                document.getElementById('iconHorizontalPadding').value = advancedIconOptions.horizontalPadding;
+                document.getElementById('iconHorizontalPaddingInput').value = advancedIconOptions.horizontalPadding + 'px';
+            }
+
+            /**
              * Reset all settings to defaults
              */
             function resetAll() {
@@ -740,6 +939,10 @@
                 shouldTintIcon = true;
                 iconPosition = ICON_CONFIG.defaultPosition;
 
+                // Reset advanced icon options to defaults
+                advancedIconOptions = { ...ADVANCED_ICON_OPTIONS };
+                localStorage.removeItem(LOCALSTORAGE_KEY);
+
                 // Reset file inputs
                 imageUpload.value = '';
                 iconUpload.value = '';
@@ -753,6 +956,9 @@
 
                 // Reset icon position button state
                 updateIconPositionButtons(ICON_CONFIG.defaultPosition);
+
+                // Update advanced options UI
+                updateAdvancedOptionsUI();
 
                 // Regenerate color picker
                 generateColorPicker(stripColorPicker, COLOR_PALETTE, stripColor, handleStripColorSelect);
@@ -780,6 +986,8 @@
                     } else {
                         document.getElementById('reEditImage').style.display = 'none';
                     }
+                    // Hide advanced options when in background mode
+                    document.getElementById('advancedIconOptions').style.display = 'none';
                 } else {
                     backgroundImageSection.style.display = 'none';
                     iconUploadSection.style.display = 'block';
@@ -787,6 +995,8 @@
                     image = null; // Clear background image when switching to icon mode
                     iconUpload.value = '';
                     document.getElementById('reEditImage').style.display = 'none';
+                    // Show advanced options when in icon mode
+                    document.getElementById('advancedIconOptions').style.display = 'block';
                 }
 
                 drawCanvas();
@@ -1042,8 +1252,8 @@
 
                 // Draw icon if uploaded (tinted to strip color if enabled)
                 if (icon) {
-                    // Calculate dimensions based on the original icon to maintain aspect ratio
-                    const displayHeight = ICON_CONFIG.defaultSize;
+                    // Use advanced options for sizing and positioning
+                    const displayHeight = advancedIconOptions.verticalSize;
                     const aspectRatio = icon.width / icon.height;
                     const displayWidth = displayHeight * aspectRatio;
                     
@@ -1051,17 +1261,17 @@
                     let iconX;
                     switch (iconPosition) {
                         case 'left':
-                            iconX = ICON_CONFIG.marginX;
+                            iconX = advancedIconOptions.horizontalPadding;
                             break;
                         case 'center':
                             iconX = (canvasWidth - displayWidth) / 2;
                             break;
                         case 'right':
                         default:
-                            iconX = canvasWidth - displayWidth - ICON_CONFIG.marginX;
+                            iconX = canvasWidth - displayWidth - advancedIconOptions.horizontalPadding;
                     }
                     
-                    const iconY = ICON_CONFIG.marginY;
+                    const iconY = advancedIconOptions.marginTop;
                     const iconToDraw = shouldTintIcon && tintedIcon ? tintedIcon : icon;
                     
                     ctx.drawImage(iconToDraw, iconX, iconY, displayWidth, displayHeight);
@@ -1147,6 +1357,97 @@
                     updateIconPositionButtons(iconPosition);
                     drawCanvas();
                 });
+            });
+
+            // Advanced Options Toggle
+            const advancedOptionsToggle = document.getElementById('advancedOptionsToggle');
+            const advancedOptionsContent = document.getElementById('advancedOptionsContent');
+            const advancedOptionsToggleIcon = document.getElementById('advancedOptionsToggleIcon');
+            let advancedOptionsExpanded = false;
+
+            advancedOptionsToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                advancedOptionsExpanded = !advancedOptionsExpanded;
+                if (advancedOptionsExpanded) {
+                    advancedOptionsContent.style.display = 'block';
+                    advancedOptionsToggleIcon.textContent = '▼';
+                } else {
+                    advancedOptionsContent.style.display = 'none';
+                    advancedOptionsToggleIcon.textContent = '▶';
+                }
+            });
+
+            // Advanced Options Sliders
+            document.getElementById('iconVerticalSize').addEventListener('input', (e) => {
+                advancedIconOptions.verticalSize = parseInt(e.target.value);
+                document.getElementById('iconVerticalSizeInput').value = advancedIconOptions.verticalSize + 'px';
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('iconVerticalSizeInput').addEventListener('change', (e) => {
+                const value = parseNumericInput(e.target.value, 20, 120);
+                advancedIconOptions.verticalSize = value;
+                document.getElementById('iconVerticalSize').value = value;
+                e.target.value = value + 'px';
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('resetIconVerticalSize').addEventListener('click', (e) => {
+                e.preventDefault();
+                advancedIconOptions.verticalSize = ADVANCED_ICON_OPTIONS.verticalSize;
+                updateAdvancedOptionsUI();
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('iconMarginTop').addEventListener('input', (e) => {
+                advancedIconOptions.marginTop = parseInt(e.target.value);
+                document.getElementById('iconMarginTopInput').value = advancedIconOptions.marginTop + 'px';
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('iconMarginTopInput').addEventListener('change', (e) => {
+                const value = parseNumericInput(e.target.value, 0, 60);
+                advancedIconOptions.marginTop = value;
+                document.getElementById('iconMarginTop').value = value;
+                e.target.value = value + 'px';
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('resetIconMarginTop').addEventListener('click', (e) => {
+                e.preventDefault();
+                advancedIconOptions.marginTop = ADVANCED_ICON_OPTIONS.marginTop;
+                updateAdvancedOptionsUI();
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('iconHorizontalPadding').addEventListener('input', (e) => {
+                advancedIconOptions.horizontalPadding = parseInt(e.target.value);
+                document.getElementById('iconHorizontalPaddingInput').value = advancedIconOptions.horizontalPadding + 'px';
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('iconHorizontalPaddingInput').addEventListener('change', (e) => {
+                const value = parseNumericInput(e.target.value, 5, 60);
+                advancedIconOptions.horizontalPadding = value;
+                document.getElementById('iconHorizontalPadding').value = value;
+                e.target.value = value + 'px';
+                saveAdvancedIconOptions();
+                drawCanvas();
+            });
+
+            document.getElementById('resetIconHorizontalPadding').addEventListener('click', (e) => {
+                e.preventDefault();
+                advancedIconOptions.horizontalPadding = ADVANCED_ICON_OPTIONS.horizontalPadding;
+                updateAdvancedOptionsUI();
+                saveAdvancedIconOptions();
+                drawCanvas();
             });
 
             // (F.3.2) Download Button
@@ -1350,6 +1651,13 @@
                     handleImageDrop(files[0], !isBackgroundMode);
                 }
             });
+
+            // Load advanced icon options from localStorage and update UI
+            loadAdvancedIconOptions();
+            updateAdvancedOptionsUI();
+
+            // Hide advanced options on initial load (only visible in icon mode)
+            document.getElementById('advancedIconOptions').style.display = 'none';
 
             // Initial draw on load
             drawCanvas();
